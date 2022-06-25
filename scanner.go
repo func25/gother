@@ -86,16 +86,16 @@ func (sc *scanner) ScanLogsLoop(ctx context.Context, cfg LoopConfig) chan struct
 				logs, currentBlock, err := sc.ScanNext(ctx)
 
 				if cfg.Emit != nil {
-					for _, v := range logs {
-						cfg.Emit(v)
+					for i := range logs {
+						cfg.Emit(logs[i])
 					}
 				}
+
+				sc.from = currentBlock + 1
 
 				if cfg.AfterHook != nil {
 					cfg.AfterHook(logs, currentBlock, err)
 				}
-
-				sc.from = currentBlock + 1
 			case <-stop:
 				return
 			}
