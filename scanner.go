@@ -17,8 +17,6 @@ type scanner struct {
 	stable    uint64
 	from      uint64
 	addresses []common.Address
-
-	stop bool
 }
 
 func NewScanner(blocks uint64) *scanner {
@@ -77,26 +75,32 @@ type LoopConfig struct {
 	AfterHook func(ogs []types.Log, currentBlock uint64, err error) // called after 1 round of scan
 }
 
-func (sc *scanner) ScanLogsLoop(ctx context.Context, cfg LoopConfig) {
-	for ; !sc.stop; time.Sleep(cfg.Duration) {
-		logs, currentBlock, err := sc.ScanNext(ctx)
+func (sc *scanner) ScanLogsLoop(ctx context.Context, cfg LoopConfig) chan struct{} {
 
-		if cfg.Emit != nil {
-			for _, v := range logs {
-				cfg.Emit(v)
+	stop := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-time.After(cfg.Duration):
+				logs, currentBlock, err := sc.ScanNext(ctx)
+
+				if cfg.Emit != nil {
+					for _, v := range logs {
+						cfg.Emit(v)
+					}
+				}
+
+				if cfg.AfterHook != nil {
+					cfg.AfterHook(logs, currentBlock, err)
+				}
+
+				sc.from = currentBlock + 1
+			case <-stop:
+				return
 			}
 		}
+	}()
 
-		if cfg.AfterHook != nil {
-			cfg.AfterHook(logs, currentBlock, err)
-		}
-
-		sc.from = currentBlock + 1
-	}
-
-	sc.stop = false
-}
-
-func (sc *scanner) StopScanLogsLoop(ctx context.Context, cfg LoopConfig) {
-	sc.stop = true
+	return stop
 }
