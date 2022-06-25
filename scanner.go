@@ -11,7 +11,7 @@ import (
 )
 
 type scanner struct {
-	GotherClient
+	*GotherClient
 	BlockNum uint64
 
 	stable    uint64
@@ -76,9 +76,7 @@ type LoopConfig struct {
 }
 
 func (sc *scanner) ScanLogsLoop(ctx context.Context, cfg LoopConfig) chan struct{} {
-
 	stop := make(chan struct{})
-
 	go func() {
 		for {
 			select {

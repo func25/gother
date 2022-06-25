@@ -9,9 +9,10 @@ import (
 
 type GotherClient struct {
 	*ethclient.Client
+	prv string
 }
 
-var Client GotherClient
+var Client *GotherClient
 
 func DialCtx(ctx context.Context, url string) (err error) {
 	Client.Client, err = ethclient.DialContext(ctx, url)
@@ -25,8 +26,12 @@ func Dial(url string) (err error) {
 	return err
 }
 
-func SetupClient(c *ethclient.Client) {
-	Client.Client = c
+func ForceSetup(c *ethclient.Client) *GotherClient {
+	Client = &GotherClient{
+		Client: c,
+	}
+
+	return Client
 }
 
 func (c GotherClient) IsSmartContract(ctx context.Context, addr string) (bool, error) {
@@ -37,4 +42,13 @@ func (c GotherClient) IsSmartContract(ctx context.Context, addr string) (bool, e
 	}
 
 	return len(bytecode) > 0, nil
+}
+
+func (c GotherClient) SignRaw(data ...[]byte) (str string, err error) {
+	return SignRaw(c.prv, data...)
+}
+
+func (c *GotherClient) InjectPrivate(prv string) *GotherClient {
+	c.prv = prv
+	return c
 }

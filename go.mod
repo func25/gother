@@ -2,7 +2,10 @@ module github.com/func25/gother
 
 go 1.18
 
-require github.com/ethereum/go-ethereum v1.10.19
+require (
+	github.com/ethereum/go-ethereum v1.10.19
+	github.com/shopspring/decimal v1.3.1
+)
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect

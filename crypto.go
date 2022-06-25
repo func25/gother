@@ -2,14 +2,11 @@ package gother
 
 import (
 	"fmt"
-	"regexp"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 )
-
-var _addrRegex = regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 
 var _signPrefix = "\x19Ethereum Signed Message:\n"
 
@@ -40,8 +37,4 @@ func SignRaw(prv string, data ...[]byte) (str string, err error) {
 
 func Uint(mul int, data []byte) []byte {
 	return common.LeftPadBytes(data, mul/8)
-}
-
-func IsAddress(addr string) bool {
-	return _addrRegex.MatchString(addr)
 }
