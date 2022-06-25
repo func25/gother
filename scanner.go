@@ -3,6 +3,7 @@ package gother
 import (
 	"context"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -13,8 +14,11 @@ type scanner struct {
 	GotherClient
 	BlockNum uint64
 
+	stable    uint64
 	from      uint64
 	addresses []common.Address
+
+	stop bool
 }
 
 func NewScanner(blocks uint64) *scanner {
@@ -36,13 +40,17 @@ func (sc *scanner) Addresses(addrs ...common.Address) *scanner {
 	return sc
 }
 
+func (sc *scanner) LatestStable(block uint64) {
+	sc.stable = block
+}
+
 func (sc *scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
-	latest, err := sc.GotherClient.HeaderLatest(ctx)
+	latestBlock, err := sc.GotherClient.HeaderLatest(ctx)
 	if err != nil {
 		return
 	}
 
-	latestNum := latest.Number.Uint64()
+	latestNum := latestBlock.Number.Uint64() - sc.stable
 
 	to := sc.from + sc.BlockNum
 	if to > latestNum {
@@ -60,4 +68,35 @@ func (sc *scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock
 	}
 
 	return logs, to, err
+}
+
+// functask: retry
+type LoopConfig struct {
+	Duration  time.Duration                                         // duration gap for each call
+	Emit      func(logs types.Log)                                  // called for each log collected
+	AfterHook func(ogs []types.Log, currentBlock uint64, err error) // called after 1 round of scan
+}
+
+func (sc *scanner) ScanLogsLoop(ctx context.Context, cfg LoopConfig) {
+	for ; !sc.stop; time.Sleep(cfg.Duration) {
+		logs, currentBlock, err := sc.ScanNext(ctx)
+
+		if cfg.Emit != nil {
+			for _, v := range logs {
+				cfg.Emit(v)
+			}
+		}
+
+		if cfg.AfterHook != nil {
+			cfg.AfterHook(logs, currentBlock, err)
+		}
+
+		sc.from = currentBlock + 1
+	}
+
+	sc.stop = false
+}
+
+func (sc *scanner) StopScanLogsLoop(ctx context.Context, cfg LoopConfig) {
+	sc.stop = true
 }

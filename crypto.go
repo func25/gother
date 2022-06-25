@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-var addrRegex = regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+var _addrRegex = regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 
 var _signPrefix = "\x19Ethereum Signed Message:\n"
 
@@ -43,5 +43,5 @@ func Uint(mul int, data []byte) []byte {
 }
 
 func IsAddress(addr string) bool {
-	return addrRegex.MatchString(addr)
+	return _addrRegex.MatchString(addr)
 }
