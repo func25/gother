@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-type scanner struct {
+type Scanner struct {
 	*GotherClient
 	BlockNum uint64
 
@@ -19,30 +19,30 @@ type scanner struct {
 	addresses []common.Address
 }
 
-func NewScanner(blocks uint64) *scanner {
-	return &scanner{
+func NewScanner(startBlock uint64) *Scanner {
+	return &Scanner{
 		GotherClient: Client,
-		BlockNum:     blocks,
+		BlockNum:     startBlock,
 	}
 }
 
-func (sc *scanner) From(from uint64) *scanner {
+func (sc *Scanner) From(from uint64) *Scanner {
 	sc.from = from
 
 	return sc
 }
 
-func (sc *scanner) Addresses(addrs ...common.Address) *scanner {
+func (sc *Scanner) Addresses(addrs ...common.Address) *Scanner {
 	sc.addresses = append(sc.addresses, addrs...)
 
 	return sc
 }
 
-func (sc *scanner) LatestStable(block uint64) {
+func (sc *Scanner) LatestStable(block uint64) {
 	sc.stable = block
 }
 
-func (sc *scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
+func (sc *Scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
 	latestBlock, err := sc.GotherClient.HeaderLatest(ctx)
 	if err != nil {
 		return
@@ -77,7 +77,7 @@ type LoopConfig struct {
 	CurrentBlock func() (uint64, error) // if nil, then currentBlock will preBlock + 1
 }
 
-func (sc *scanner) ScanLogsLoop(cfg LoopConfig) chan struct{} {
+func (sc *Scanner) ScanLogsLoop(cfg LoopConfig) chan struct{} {
 	stop := make(chan struct{})
 	var err error
 
