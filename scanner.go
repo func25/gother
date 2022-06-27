@@ -11,18 +11,18 @@ import (
 )
 
 type Scanner struct {
-	*GotherClient
 	ScanNum uint64
 
 	stable    uint64
 	from      uint64
 	addresses []common.Address
+	client    *GotherClient
 }
 
 func NewScanner(scanNum uint64) *Scanner {
 	return &Scanner{
-		GotherClient: Client,
-		ScanNum:      scanNum,
+		client:  Client,
+		ScanNum: scanNum,
 	}
 }
 
@@ -32,7 +32,7 @@ func (sc *Scanner) From(from uint64) *Scanner {
 	return sc
 }
 
-func (sc *Scanner) Addresses(addrs ...common.Address) *Scanner {
+func (sc *Scanner) AddAddresses(addrs ...common.Address) *Scanner {
 	sc.addresses = append(sc.addresses, addrs...)
 
 	return sc
@@ -43,7 +43,7 @@ func (sc *Scanner) LatestStable(block uint64) {
 }
 
 func (sc *Scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
-	latestBlock, err := sc.GotherClient.HeaderLatest(ctx)
+	latestBlock, err := sc.client.HeaderLatest(ctx)
 	if err != nil {
 		return
 	}
@@ -55,7 +55,7 @@ func (sc *Scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock
 		to = latestNum
 	}
 
-	logs, err = sc.Client.FilterLogs(ctx, ethereum.FilterQuery{
+	logs, err = sc.client.FilterLogs(ctx, ethereum.FilterQuery{
 		FromBlock: new(big.Int).SetUint64(sc.from),
 		ToBlock:   new(big.Int).SetUint64(to),
 		Addresses: sc.addresses,
