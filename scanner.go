@@ -32,8 +32,14 @@ func (sc *Scanner) From(from uint64) *Scanner {
 	return sc
 }
 
-func (sc *Scanner) AddAddresses(addrs ...common.Address) *Scanner {
-	sc.addresses = append(sc.addresses, addrs...)
+// func (sc *Scanner) AddAddresses(addrs ...common.Address) *Scanner {
+// 	sc.addresses = append(sc.addresses, addrs...)
+
+// 	return sc
+// }
+
+func (sc *Scanner) SetAddresses(addrs ...common.Address) *Scanner {
+	sc.addresses = addrs
 
 	return sc
 }
@@ -42,7 +48,7 @@ func (sc *Scanner) LatestStable(block uint64) {
 	sc.stable = block
 }
 
-func (sc *Scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
+func (sc *Scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
 	latestBlock, err := sc.client.HeaderLatest(ctx)
 	if err != nil {
 		return
@@ -86,7 +92,7 @@ func (sc *Scanner) SoldierScan(s IWorker, dur time.Duration) chan struct{} {
 				}
 
 				// scan logs
-				logs, currentBlock, err := sc.ScanNext(ctx)
+				logs, currentBlock, err := sc.Scan(ctx)
 				if err != nil {
 					continue
 				}
