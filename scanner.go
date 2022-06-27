@@ -12,17 +12,17 @@ import (
 
 type Scanner struct {
 	*GotherClient
-	BlockNum uint64
+	ScanNum uint64
 
 	stable    uint64
 	from      uint64
 	addresses []common.Address
 }
 
-func NewScanner(startBlock uint64) *Scanner {
+func NewScanner(scanNum uint64) *Scanner {
 	return &Scanner{
 		GotherClient: Client,
-		BlockNum:     startBlock,
+		ScanNum:      scanNum,
 	}
 }
 
@@ -50,7 +50,7 @@ func (sc *Scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock
 
 	latestNum := latestBlock.Number.Uint64() - sc.stable
 
-	to := sc.from + sc.BlockNum
+	to := sc.from + sc.ScanNum
 	if to > latestNum {
 		to = latestNum
 	}
@@ -68,45 +68,37 @@ func (sc *Scanner) ScanNext(ctx context.Context) (logs []types.Log, currentBlock
 	return logs, to, err
 }
 
-// functask: retry
-type LoopConfig struct {
-	Duration  time.Duration                                         // duration gap for each call
-	Emit      func(logs types.Log)                                  // called for each log collected
-	AfterHook func(ogs []types.Log, currentBlock uint64, err error) // called after 1 round of scan
-
-	CurrentBlock func() (uint64, error) // if nil, then currentBlock will preBlock + 1
-}
-
-func (sc *Scanner) ScanLogsLoop(cfg LoopConfig) chan struct{} {
+//SoldierScan ignore error when process logs and update block
+func (sc *Scanner) SoldierScan(s IWorker, dur time.Duration) chan struct{} {
 	stop := make(chan struct{})
-	var err error
 
 	go func() {
 		for {
 			select {
-			case <-time.After(cfg.Duration):
+			case <-time.After(dur):
 				ctx := context.Background()
 
-				// find current block
-				if cfg.CurrentBlock != nil {
-					sc.from, err = cfg.CurrentBlock()
-					if err != nil {
-						continue
-					}
+				// get block
+				if v, err := s.GetBlock(ctx); err != nil {
+					continue
+				} else {
+					sc.from = v + 1
 				}
+
+				// scan logs
 				logs, currentBlock, err := sc.ScanNext(ctx)
-
-				if cfg.Emit != nil {
-					for i := range logs {
-						cfg.Emit(logs[i])
-					}
+				if err != nil {
+					continue
 				}
 
+				// process logs
+				for i := range logs {
+					_ = s.ProcessLog(logs[i])
+				}
 				sc.from = currentBlock + 1
 
-				if cfg.AfterHook != nil {
-					cfg.AfterHook(logs, currentBlock, err)
-				}
+				// update block
+				_ = s.UpdateBlock(ctx, currentBlock)
 			case <-stop:
 				return
 			}
