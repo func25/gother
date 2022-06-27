@@ -73,14 +73,27 @@ type LoopConfig struct {
 	Duration  time.Duration                                         // duration gap for each call
 	Emit      func(logs types.Log)                                  // called for each log collected
 	AfterHook func(ogs []types.Log, currentBlock uint64, err error) // called after 1 round of scan
+
+	CurrentBlock func() (uint64, error) // if nil, then currentBlock will preBlock + 1
 }
 
-func (sc *scanner) ScanLogsLoop(ctx context.Context, cfg LoopConfig) chan struct{} {
+func (sc *scanner) ScanLogsLoop(cfg LoopConfig) chan struct{} {
 	stop := make(chan struct{})
+	var err error
+
 	go func() {
 		for {
 			select {
 			case <-time.After(cfg.Duration):
+				ctx := context.Background()
+
+				// find current block
+				if cfg.CurrentBlock != nil {
+					sc.from, err = cfg.CurrentBlock()
+					if err != nil {
+						continue
+					}
+				}
 				logs, currentBlock, err := sc.ScanNext(ctx)
 
 				if cfg.Emit != nil {
