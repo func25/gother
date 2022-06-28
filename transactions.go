@@ -22,22 +22,21 @@ type SmcTxData struct {
 	Smc   Smc
 	Value *big.Int
 	Data  []byte
-	prv   string // private key
 }
 
 // functask: optimize this
 // functask: add more option
-func (c GotherClient) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts, error) {
+func (c account) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts, error) {
 	// functask: validate
 
 	var err error
 
-	pri := tx.prv
+	pri := c.pri
 	if len(pri) == 0 {
-		pri = c.prv
+		pri = c.pri
 	}
 
-	priK, err := crypto.HexToECDSA(c.prv)
+	priK, err := crypto.HexToECDSA(c.pri)
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +50,12 @@ func (c GotherClient) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.Transac
 	from := crypto.PubkeyToAddress(*pubKECDSA)
 	to := common.HexToAddress(tx.Smc.Address)
 
-	gasPrice, err := c.SuggestGasPrice(ctx)
+	gasPrice, err := c.Client.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	gasLimit, err := c.EstimateGas(ctx, ethereum.CallMsg{
+	gasLimit, err := c.Client.EstimateGas(ctx, ethereum.CallMsg{
 		From:     from,
 		To:       &to,
 		Value:    tx.Value,
@@ -68,7 +67,7 @@ func (c GotherClient) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.Transac
 	}
 
 	// functask: cache this
-	chainID, err := c.NetworkID(ctx)
+	chainID, err := c.Client.NetworkID(ctx)
 	if err != nil {
 		return nil, err
 	}
