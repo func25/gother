@@ -1,14 +1,14 @@
 package gother
 
 type account struct {
-	Client *GotherClient
-	pri    string
+	*GotherClient
+	pri string
 }
 
 func NewAccount(privateKey string) *account {
 	return &account{
-		pri:    privateKey,
-		Client: Client,
+		pri:          privateKey,
+		GotherClient: Client,
 	}
 }
 
