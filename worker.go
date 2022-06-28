@@ -19,7 +19,7 @@ type Lazier[T IAgent] struct {
 	Duration time.Duration
 }
 
-func (sol Lazier[T]) Scan(s Scanner) chan struct{} {
+func (sol Lazier[T]) Scan(s scanner) chan struct{} {
 	stop := make(chan struct{})
 
 	go func() {

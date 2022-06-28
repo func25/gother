@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-type Scanner struct {
+type scanner struct {
 	ScanNum   uint64
 	Offset    uint64
 	From      uint64
@@ -18,24 +18,24 @@ type Scanner struct {
 	client *GotherClient
 }
 
-func (s Scanner) Clone() *Scanner {
+func (s scanner) Clone() *scanner {
 	return &s
 }
 
-func NewScanner(scanNum uint64) *Scanner {
-	return &Scanner{
+func NewScanner(scanNum uint64) *scanner {
+	return &scanner{
 		client:  Client,
 		ScanNum: scanNum,
 	}
 }
 
-func (sc *Scanner) InjClient(client *GotherClient) *Scanner {
+func (sc *scanner) InjClient(client *GotherClient) *scanner {
 	sc.client = client
 
 	return sc
 }
 
-func (sc *Scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
+func (sc *scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
 	latestBlock, err := sc.client.HeaderLatest(ctx)
 	if err != nil {
 		return
