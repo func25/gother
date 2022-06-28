@@ -18,10 +18,24 @@ type Smc struct {
 	Address string
 }
 
+type SmcTxData struct {
+	Smc   Smc
+	Value *big.Int
+	Data  []byte
+	prv   string // private key
+}
+
 // functask: optimize this
 // functask: add more option
-func (c GotherClient) NewSmcTx(ctx context.Context, smc Smc, value *big.Int, data []byte) (*bind.TransactOpts, error) {
+func (c GotherClient) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts, error) {
+	// functask: validate
+
 	var err error
+
+	pri := tx.prv
+	if len(pri) == 0 {
+		pri = c.prv
+	}
 
 	priK, err := crypto.HexToECDSA(c.prv)
 	if err != nil {
@@ -35,7 +49,7 @@ func (c GotherClient) NewSmcTx(ctx context.Context, smc Smc, value *big.Int, dat
 	}
 
 	from := crypto.PubkeyToAddress(*pubKECDSA)
-	to := common.HexToAddress(smc.Address)
+	to := common.HexToAddress(tx.Smc.Address)
 
 	gasPrice, err := c.SuggestGasPrice(ctx)
 	if err != nil {
@@ -45,9 +59,9 @@ func (c GotherClient) NewSmcTx(ctx context.Context, smc Smc, value *big.Int, dat
 	gasLimit, err := c.EstimateGas(ctx, ethereum.CallMsg{
 		From:     from,
 		To:       &to,
-		Value:    value,
+		Value:    tx.Value,
 		GasPrice: gasPrice,
-		Data:     data,
+		Data:     tx.Data,
 	})
 	if err != nil {
 		return nil, err
@@ -64,7 +78,7 @@ func (c GotherClient) NewSmcTx(ctx context.Context, smc Smc, value *big.Int, dat
 		return nil, err
 	}
 
-	txOps.Value = value
+	txOps.Value = tx.Value
 	txOps.GasLimit = gasLimit
 	txOps.GasPrice = gasPrice
 
