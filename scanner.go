@@ -9,39 +9,49 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-type scanner struct {
-	ScanNum   uint64
-	Offset    uint64
-	From      uint64
-	Addresses []common.Address
+type Scanner struct {
+	ScanNum   uint64           // how many blocks scanning each time
+	offset    uint64           // offset from latest block (unstable blocks)
+	From      uint64           // scan from?
+	Addresses []common.Address // smart contract address
 
 	client *GotherClient
 }
 
-func (s scanner) Clone() *scanner {
+func (s Scanner) Clone() *Scanner {
 	return &s
 }
 
-func NewScanner(scanNum uint64) *scanner {
-	return &scanner{
-		client:  Client,
-		ScanNum: scanNum,
+// default offset is 1
+func NewScanner(scanNum uint64, from uint64, addresses ...common.Address) *Scanner {
+	return &Scanner{
+		ScanNum:   scanNum,
+		From:      from,
+		Addresses: addresses,
+		client:    Client,
+		offset:    1,
 	}
 }
 
-func (sc *scanner) InjClient(client *GotherClient) *scanner {
+func (sc *Scanner) InjClient(client *GotherClient) *Scanner {
 	sc.client = client
 
 	return sc
 }
 
-func (sc *scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
+func (sc *Scanner) InjOffset(offset uint64) *Scanner {
+	sc.offset = offset
+
+	return sc
+}
+
+func (sc *Scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
 	latestBlock, err := sc.client.HeaderLatest(ctx)
 	if err != nil {
 		return
 	}
 
-	latestNum := latestBlock.Number.Uint64() - sc.Offset
+	latestNum := latestBlock.Number.Uint64() - sc.offset
 
 	to := sc.From + sc.ScanNum
 	if to > latestNum {
