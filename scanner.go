@@ -3,7 +3,6 @@ package gother
 import (
 	"context"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -11,12 +10,16 @@ import (
 )
 
 type Scanner struct {
-	ScanNum uint64
+	ScanNum   uint64
+	Offset    uint64
+	From      uint64
+	Addresses []common.Address
 
-	stable    uint64
-	from      uint64
-	addresses []common.Address
-	client    *GotherClient
+	client *GotherClient
+}
+
+func (s Scanner) Clone() *Scanner {
+	return &s
 }
 
 func NewScanner(scanNum uint64) *Scanner {
@@ -26,26 +29,8 @@ func NewScanner(scanNum uint64) *Scanner {
 	}
 }
 
-func (sc *Scanner) InjFrom(from uint64) *Scanner {
-	sc.from = from
-
-	return sc
-}
-
-// func (sc *Scanner) AddAddresses(addrs ...common.Address) *Scanner {
-// 	sc.addresses = append(sc.addresses, addrs...)
-
-// 	return sc
-// }
-
-func (sc *Scanner) InjAddresses(addrs ...common.Address) *Scanner {
-	sc.addresses = addrs
-
-	return sc
-}
-
-func (sc *Scanner) InjStableBlock(block uint64) *Scanner {
-	sc.stable = block
+func (sc *Scanner) InjClient(client *GotherClient) *Scanner {
+	sc.client = client
 
 	return sc
 }
@@ -56,17 +41,21 @@ func (sc *Scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uin
 		return
 	}
 
-	latestNum := latestBlock.Number.Uint64() - sc.stable
+	latestNum := latestBlock.Number.Uint64() - sc.Offset
 
-	to := sc.from + sc.ScanNum
+	to := sc.From + sc.ScanNum
 	if to > latestNum {
 		to = latestNum
 	}
 
+	if sc.From > to {
+		return nil, sc.From - 1, nil
+	}
+
 	logs, err = sc.client.FilterLogs(ctx, ethereum.FilterQuery{
-		FromBlock: new(big.Int).SetUint64(sc.from),
+		FromBlock: new(big.Int).SetUint64(sc.From),
 		ToBlock:   new(big.Int).SetUint64(to),
-		Addresses: sc.addresses,
+		Addresses: sc.Addresses,
 	})
 
 	if err != nil {
@@ -74,44 +63,4 @@ func (sc *Scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uin
 	}
 
 	return logs, to, err
-}
-
-//SoldierScan ignore error when process logs and update block
-func (sc *Scanner) SoldierScan(s IWorker, dur time.Duration) chan struct{} {
-	stop := make(chan struct{})
-
-	go func() {
-		for {
-			select {
-			case <-time.After(dur):
-				ctx := context.Background()
-
-				// get block
-				if v, err := s.GetBlock(ctx); err != nil {
-					continue
-				} else {
-					sc.from = v + 1
-				}
-
-				// scan logs
-				logs, currentBlock, err := sc.Scan(ctx)
-				if err != nil {
-					continue
-				}
-
-				// process logs
-				for i := range logs {
-					_ = s.ProcessLog(logs[i])
-				}
-				sc.from = currentBlock + 1
-
-				// update block
-				_ = s.UpdateBlock(ctx, currentBlock)
-			case <-stop:
-				return
-			}
-		}
-	}()
-
-	return stop
 }
