@@ -26,7 +26,7 @@ func NewScanner(scanNum uint64) *Scanner {
 	}
 }
 
-func (sc *Scanner) From(from uint64) *Scanner {
+func (sc *Scanner) InjFrom(from uint64) *Scanner {
 	sc.from = from
 
 	return sc
@@ -38,14 +38,16 @@ func (sc *Scanner) From(from uint64) *Scanner {
 // 	return sc
 // }
 
-func (sc *Scanner) SetAddresses(addrs ...common.Address) *Scanner {
+func (sc *Scanner) InjAddresses(addrs ...common.Address) *Scanner {
 	sc.addresses = addrs
 
 	return sc
 }
 
-func (sc *Scanner) LatestStable(block uint64) {
+func (sc *Scanner) InjStableBlock(block uint64) *Scanner {
 	sc.stable = block
+
+	return sc
 }
 
 func (sc *Scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
