@@ -13,10 +13,11 @@ type GotherClient struct {
 
 var Client *GotherClient = &GotherClient{}
 
-func DialCtx(ctx context.Context, url string) (client GotherClient, err error) {
+func DialCtx(ctx context.Context, url string) (*GotherClient, error) {
+	var err error
 	Client.Client, err = ethclient.DialContext(ctx, url)
 
-	return client, err
+	return Client, err
 }
 
 func Dial(url string) (err error) {

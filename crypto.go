@@ -8,9 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-var _signPrefix = "\x19Ethereum Signed Message:\n"
-
 const (
+	_signPrefix    = "\x19Ethereum Signed Message:\n"
 	_signV         = 27
 	_signLastBytes = 64
 )
