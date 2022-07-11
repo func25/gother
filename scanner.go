@@ -45,6 +45,12 @@ func (sc *Scanner) InjOffset(offset uint64) *Scanner {
 	return sc
 }
 
+func (sc *Scanner) InjAddresses(addresses ...common.Address) *Scanner {
+	sc.Addresses = addresses
+
+	return sc
+}
+
 func (sc *Scanner) Scan(ctx context.Context) (logs []types.Log, currentBlock uint64, err error) {
 	latestBlock, err := sc.client.HeaderLatest(ctx)
 	if err != nil {
