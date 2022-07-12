@@ -78,7 +78,7 @@ func (c account) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts
 	}
 
 	txOps.Value = tx.Value
-	txOps.GasLimit = gasLimit
+	txOps.GasLimit = gasLimit + gasLimit*10/100 // 110% gas limit
 	txOps.GasPrice = gasPrice
 
 	return txOps, nil
