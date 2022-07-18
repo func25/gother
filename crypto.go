@@ -1,6 +1,7 @@
 package gother
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -34,13 +35,13 @@ func SignRaw(prv string, data ...[]byte) (str string, err error) {
 	return hexutil.Encode(signature), nil
 }
 
-func RecoverECDSA(data []byte, signature []byte) ([]byte, error) {
+func RecoverECDSA(data []byte, signature []byte) (*ecdsa.PublicKey, error) {
 	content := crypto.Keccak256Hash(data)
 	public, err := crypto.Ecrecover(content.Bytes(), signature)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
-	return public, nil
+	return crypto.DecompressPubkey(public)
 }
 
 func Uint(mul int, data []byte) []byte {
