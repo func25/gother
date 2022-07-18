@@ -34,6 +34,15 @@ func SignRaw(prv string, data ...[]byte) (str string, err error) {
 	return hexutil.Encode(signature), nil
 }
 
+func RecoverECDSA(data []byte, signature []byte) ([]byte, error) {
+	content := crypto.Keccak256Hash(data)
+	public, err := crypto.Ecrecover(content.Bytes(), signature)
+	if err != nil {
+		return []byte{}, err
+	}
+	return public, nil
+}
+
 func Uint(mul int, data []byte) []byte {
 	return common.LeftPadBytes(data, mul/8)
 }
