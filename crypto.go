@@ -1,6 +1,7 @@
 package gother
 
 import (
+	"crypto/ecdsa"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -40,4 +41,27 @@ func Sign(prv string, data []byte) (str string, err error) {
 
 func Uint(mul int, data []byte) []byte {
 	return common.LeftPadBytes(data, mul/8)
+}
+
+func RecoverETHSig(msg, sig []byte) (*ecdsa.PublicKey, error) {
+	if sig[64] != 27 && sig[64] != 28 {
+		return nil, fmt.Errorf("invalid Ethereum signature (V is not 27 or 28)")
+	}
+	sig[64] -= 27
+
+	pubKey, err := crypto.SigToPub(msg, sig)
+	if err != nil {
+		return nil, err
+	}
+
+	return pubKey, nil
+}
+
+func RecoverHexSig(msg []byte, hexSig string) (*ecdsa.PublicKey, error) {
+	sig, err := hexutil.Decode(hexSig)
+	if err != nil {
+		return nil, err
+	}
+
+	return RecoverETHSig(msg, sig)
 }
