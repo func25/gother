@@ -38,7 +38,7 @@ func TestSign(t *testing.T) {
 	token2 := common.LeftPadBytes(_token2.Bytes(), 32)
 	expiredAt := common.LeftPadBytes(new(big.Int).SetInt64(_expiredAt).Bytes(), 32)
 	sender := common.HexToAddress(address).Bytes()
-	signature2, err := gother.SignRaw(privateKey, sender, id, amount, token0, token1, token2, expiredAt)
+	signature2, err := gother.Keccak256Sign(privateKey, sender, id, amount, token0, token1, token2, expiredAt)
 	if err != nil {
 		t.Error(err)
 		return

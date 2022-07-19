@@ -1,7 +1,6 @@
 package gother
 
 import (
-	"crypto/ecdsa"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -15,9 +14,13 @@ const (
 	_signLastBytes = 64
 )
 
-func SignRaw(prv string, data ...[]byte) (str string, err error) {
+func Keccak256Sign(prv string, data ...[]byte) (str string, err error) {
 	dataHash := crypto.Keccak256Hash(data...)
-	msg := fmt.Sprintf("%s%d%s", _signPrefix, len(dataHash), dataHash.Bytes())
+	return Sign(prv, dataHash.Bytes())
+}
+
+func Sign(prv string, data []byte) (str string, err error) {
+	msg := fmt.Sprintf("%s%d%s", _signPrefix, len(data), data)
 	ethHash := crypto.Keccak256Hash([]byte(msg))
 
 	privateKey, err := crypto.HexToECDSA(prv)
@@ -33,15 +36,6 @@ func SignRaw(prv string, data ...[]byte) (str string, err error) {
 	signature[_signLastBytes] += _signV
 
 	return hexutil.Encode(signature), nil
-}
-
-func RecoverECDSA(data []byte, signature []byte) (*ecdsa.PublicKey, error) {
-	content := crypto.Keccak256Hash(data)
-	public, err := crypto.Ecrecover(content.Bytes(), signature)
-	if err != nil {
-		return nil, err
-	}
-	return crypto.DecompressPubkey(public)
 }
 
 func Uint(mul int, data []byte) []byte {

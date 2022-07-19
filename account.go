@@ -17,6 +17,10 @@ func (a *account) InjectPrivate(privateKey string) *account {
 	return a
 }
 
-func (c account) SignRaw(data ...[]byte) (str string, err error) {
-	return SignRaw(c.pri, data...)
+func (c account) Keccak256Sign(data ...[]byte) (str string, err error) {
+	return Keccak256Sign(c.pri, data...)
+}
+
+func (c account) Sign(data []byte) (str string, err error) {
+	return Sign(c.pri, data)
 }
