@@ -10,9 +10,8 @@ import (
 )
 
 const (
-	_signPrefix    = "\x19Ethereum Signed Message:\n"
-	_signV         = 27
-	_signLastBytes = 64
+	SIG_PREFIX = "\x19Ethereum Signed Message:\n"
+	SIG_V      = 27
 )
 
 func Keccak256Sign(prv string, data ...[]byte) (str string, err error) {
@@ -21,7 +20,7 @@ func Keccak256Sign(prv string, data ...[]byte) (str string, err error) {
 }
 
 func Sign(prv string, data []byte) (str string, err error) {
-	msg := fmt.Sprintf("%s%d%s", _signPrefix, len(data), data)
+	msg := fmt.Sprintf("%s%d%s", SIG_PREFIX, len(data), data)
 	ethHash := crypto.Keccak256Hash([]byte(msg))
 
 	privateKey, err := crypto.HexToECDSA(prv)
@@ -34,7 +33,7 @@ func Sign(prv string, data []byte) (str string, err error) {
 		return
 	}
 
-	signature[_signLastBytes] += _signV
+	signature[len(signature)-1] += SIG_V
 
 	return hexutil.Encode(signature), nil
 }

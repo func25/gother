@@ -1,6 +1,7 @@
 package gother
 
 import (
+	"fmt"
 	"math/big"
 	"reflect"
 	"regexp"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 )
 
@@ -117,4 +119,8 @@ func (util) SigRSV(isig interface{}) ([32]byte, [32]byte, uint8) {
 	V := uint8(vI + 27)
 
 	return R, S, V
+}
+
+func (util) ToEthSignedMessageHash(data []byte) []byte {
+	return crypto.Keccak256([]byte(fmt.Sprintf("%s%d%s", SIG_PREFIX, len(data), data)))
 }
