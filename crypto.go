@@ -46,10 +46,9 @@ func Uint(mul int, data []byte) []byte {
 
 // RecoverHexSig will recover public key from [65]byte signature
 func RecoverETHSig(msg, sig []byte) (*ecdsa.PublicKey, error) {
-	if sig[64] != 27 && sig[64] != 28 {
-		return nil, fmt.Errorf("invalid Ethereum signature (V is not 27 or 28)")
+	if sig[64] == 27 || sig[64] == 28 {
+		sig[64] -= 27
 	}
-	sig[64] -= 27
 
 	pubKey, err := crypto.SigToPub(msg, sig)
 	if err != nil {
@@ -68,10 +67,6 @@ func RecoverHexSig(msg []byte, hexSig string) (*ecdsa.PublicKey, error) {
 
 	if len(sig) < 65 {
 		return nil, fmt.Errorf("signature invalid, len(sig) < 65")
-	}
-
-	if sig[64] == 0 || sig[64] == 1 {
-		sig[64] += SIG_V
 	}
 
 	return RecoverETHSig(msg, sig)
