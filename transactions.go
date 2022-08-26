@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -86,7 +87,7 @@ type TxData struct {
 	Value *big.Int
 }
 
-func (c account) NewTx(ctx context.Context, data TxData) (*bind.TransactOpts, error) {
+func (c account) NewTx(ctx context.Context, data TxData) (*types.Transaction, error) {
 	var err error
 
 	pri := c.pri
@@ -108,12 +109,20 @@ func (c account) NewTx(ctx context.Context, data TxData) (*bind.TransactOpts, er
 	from := crypto.PubkeyToAddress(*pubKECDSA)
 	to := common.HexToAddress(data.To)
 
-	gasPrice, err := c.Client.SuggestGasPrice(ctx)
+	// nonce
+	nonce, err := c.PendingNonceAt(ctx, from)
 	if err != nil {
 		return nil, err
 	}
 
-	gasLimit, err := c.Client.EstimateGas(ctx, ethereum.CallMsg{
+	// gas price
+	gasPrice, err := c.SuggestGasPrice(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// gas limit
+	gasLimit, err := c.EstimateGas(ctx, ethereum.CallMsg{
 		From:     from,
 		To:       &to,
 		Value:    data.Value,
@@ -124,20 +133,34 @@ func (c account) NewTx(ctx context.Context, data TxData) (*bind.TransactOpts, er
 		return nil, err
 	}
 
+	// chainid
 	// functask: cache this
-	chainID, err := c.Client.NetworkID(ctx)
+	chainID, err := c.NetworkID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	txOps, err := bind.NewKeyedTransactorWithChainID(priK, chainID)
+	tx := types.NewTransaction(nonce, to, data.Value, gasLimit, gasPrice, []byte{})
+
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), priK)
 	if err != nil {
 		return nil, err
 	}
 
-	txOps.Value = data.Value
-	txOps.GasLimit = gasLimit + gasLimit*10/100 // 110% gas limit
-	txOps.GasPrice = gasPrice
+	return signedTx, nil
+}
 
-	return txOps, nil
+// sign transaction and send
+// return signed transaction
+func (c account) SendTx(ctx context.Context, data TxData) (*types.Transaction, error) {
+	tx, err := c.NewTx(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := c.SendTransaction(ctx, tx); err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
