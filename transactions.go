@@ -24,11 +24,8 @@ type SmcTxData struct {
 	Data  []byte
 }
 
-// functask: optimize this
-// functask: add more option
+// NewSmcTx creates a transaction calling smart contract with suggest gas price and 110% gas limit
 func (c account) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts, error) {
-	// functask: validate
-
 	var err error
 
 	pri := c.pri
@@ -78,7 +75,7 @@ func (c account) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts
 	}
 
 	txOps.Value = tx.Value
-	txOps.GasLimit = gasLimit + gasLimit*5/100 // 105% gas limit
+	txOps.GasLimit = gasLimit + gasLimit*10/100 // 110% gas limit
 	txOps.GasPrice = gasPrice
 
 	return txOps, nil

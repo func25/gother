@@ -1,6 +1,8 @@
 package gother
 
 import (
+	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"math/big"
 	"reflect"
@@ -13,14 +15,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type util struct{}
+type gotherUtil struct{}
 
-func Util() util {
-	return util{}
-}
+var Util gotherUtil
 
 // IsValidAddress validate hex address
-func (util) IsValidAddress(iaddress interface{}) bool {
+func (gotherUtil) IsValidAddress(iaddress interface{}) bool {
 	re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	switch v := iaddress.(type) {
 	case string:
@@ -33,7 +33,7 @@ func (util) IsValidAddress(iaddress interface{}) bool {
 }
 
 // IsZeroAddress validate if it's a 0 address
-func (util) IsZeroAddress(iaddress interface{}) bool {
+func (gotherUtil) IsZeroAddress(iaddress interface{}) bool {
 	var address common.Address
 	switch v := iaddress.(type) {
 	case string:
@@ -50,7 +50,7 @@ func (util) IsZeroAddress(iaddress interface{}) bool {
 }
 
 // ToDecimal wei to decimals
-func (util) ToDecimal(ivalue interface{}, decimals int) decimal.Decimal {
+func (gotherUtil) ToDecimal(ivalue interface{}, decimals int) decimal.Decimal {
 	value := new(big.Int)
 	switch v := ivalue.(type) {
 	case string:
@@ -67,7 +67,7 @@ func (util) ToDecimal(ivalue interface{}, decimals int) decimal.Decimal {
 }
 
 // ToWei decimals to wei
-func (util) ToWei(iamount interface{}, decimals int) *big.Int {
+func (gotherUtil) ToWei(iamount interface{}, decimals int) *big.Int {
 	amount := decimal.NewFromFloat(0)
 	switch v := iamount.(type) {
 	case string:
@@ -92,13 +92,13 @@ func (util) ToWei(iamount interface{}, decimals int) *big.Int {
 }
 
 // CalcGasCost calculate gas cost given gas limit (units) and gas price (wei)
-func (util) CalcGasCost(gasLimit uint64, gasPrice *big.Int) *big.Int {
+func (gotherUtil) CalcGasCost(gasLimit uint64, gasPrice *big.Int) *big.Int {
 	gasLimitBig := big.NewInt(int64(gasLimit))
 	return gasLimitBig.Mul(gasLimitBig, gasPrice)
 }
 
 // SigRSV signatures R S V returned as arrays
-func (util) SigRSV(isig interface{}) ([32]byte, [32]byte, uint8) {
+func (gotherUtil) SigRSV(isig interface{}) ([32]byte, [32]byte, uint8) {
 	var sig []byte
 	switch v := isig.(type) {
 	case []byte:
@@ -121,6 +121,36 @@ func (util) SigRSV(isig interface{}) ([32]byte, [32]byte, uint8) {
 	return R, S, V
 }
 
-func (util) ToEthSignedMessageHash(data []byte) []byte {
+func (gotherUtil) ToEthSignedMessageHash(data []byte) []byte {
 	return crypto.Keccak256([]byte(fmt.Sprintf("%s%d%s", SIG_PREFIX, len(data), data)))
+}
+
+// func (gotherUtil) HexToECDSAPrv(priv string) (*ecdsa.PrivateKey, error) {
+// 	pk := new(ecdsa.PrivateKey)
+// 	pk.D, _ = new(big.Int).SetString(priv, 16)
+// 	pk.PublicKey.Curve = elliptic.P256()
+// 	pk.PublicKey.X, pk.PublicKey.Y = pk.PublicKey.Curve.ScalarBaseMult(pk.D.Bytes())
+// 	return pk, nil
+// }
+
+func (gotherUtil) GetPublicHex(priv *ecdsa.PrivateKey) (string, error) {
+	publicKey := priv.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return "", errors.New("cannot parse public key to *edsa.PublicKey")
+	}
+	return hexutil.Encode(crypto.FromECDSAPub(publicKeyECDSA))[4:], nil
+}
+
+func (gotherUtil) GetPublic(priv *ecdsa.PrivateKey) (*ecdsa.PublicKey, error) {
+	publicKey := priv.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, errors.New("cannot parse public key to *edsa.PublicKey")
+	}
+	return publicKeyECDSA, nil
+}
+
+func (gotherUtil) GetAddressHex(pub *ecdsa.PublicKey) string {
+	return crypto.PubkeyToAddress(*pub).Hex()
 }

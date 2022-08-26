@@ -8,9 +8,9 @@ import (
 )
 
 type IAgent interface {
-	NextBlock(ctx context.Context) (uint64, error)
-	UpdateBlock(ctx context.Context, block uint64) error
-	ProcessLog(ctx context.Context, log types.Log) error
+	FromBlock(ctx context.Context) (uint64, error)       // get the next block which want to scan from
+	ProcessLog(ctx context.Context, log types.Log) error // process the logs that agent collects
+	UpdateBlock(ctx context.Context, block uint64) error // update the scanned block after scanning
 }
 
 //Lazier is too lazy, he/she ignores errors when processing logs and updating block
@@ -19,6 +19,9 @@ type Lazier[T IAgent] struct {
 	Duration time.Duration
 }
 
+// Lazier will scan the blocks to get the logs with 3 steps with IAgent:
+// 	- FromBlock -> ProcessLog -> UpdateBlock
+// Read IAgent interface for more information
 func (sol Lazier[T]) Scan(s Scanner) chan struct{} {
 	stop := make(chan struct{})
 
@@ -29,7 +32,7 @@ func (sol Lazier[T]) Scan(s Scanner) chan struct{} {
 				ctx := context.Background()
 
 				// get block
-				if v, err := sol.Agent.NextBlock(ctx); err != nil {
+				if v, err := sol.Agent.FromBlock(ctx); err != nil {
 					continue
 				} else {
 					s.From = v

@@ -2,6 +2,7 @@ package gother
 
 import (
 	"crypto/ecdsa"
+	"errors"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -13,6 +14,14 @@ const (
 	SIG_PREFIX = "\x19Ethereum Signed Message:\n"
 	SIG_V      = 27
 )
+
+type Wallet struct {
+	Private      string
+	PrivateECDSA *ecdsa.PrivateKey
+	Public       string
+	PublicECDSA  *ecdsa.PublicKey
+	Address      string
+}
 
 // Keccak256Sign will hash data to 32 bytes (= keccak256) then signing it
 func Keccak256Sign(prv string, data ...[]byte) (str string, err error) {
@@ -70,4 +79,29 @@ func RecoverHexSig(msg []byte, hexSig string) (*ecdsa.PublicKey, error) {
 	}
 
 	return RecoverETHSig(msg, sig)
+}
+
+func NewWallet() (*Wallet, error) {
+	privateKey, err := crypto.GenerateKey()
+	if err != nil {
+		return nil, err
+	}
+	hexPrivate := hexutil.Encode(crypto.FromECDSA(privateKey))[2:]
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, errors.New("error casting public key to ECDSA")
+	}
+	hexPublic := hexutil.Encode(crypto.FromECDSAPub(publicKeyECDSA)[4:])
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
+
+	return &Wallet{
+		Private:      hexPrivate,
+		PrivateECDSA: privateKey,
+		Public:       hexPublic,
+		PublicECDSA:  publicKeyECDSA,
+		Address:      address,
+	}, nil
 }

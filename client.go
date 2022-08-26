@@ -2,6 +2,7 @@ package gother
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -13,19 +14,24 @@ type GotherClient struct {
 
 var Client *GotherClient = &GotherClient{}
 
+// DialCtx will connect to `url` and set the default client to client(url) if default client is nil
 func DialCtx(ctx context.Context, url string) (*GotherClient, error) {
 	var err error
-	Client.Client, err = ethclient.DialContext(ctx, url)
+	if Client.Client == nil {
+		Client.Client, err = ethclient.DialContext(ctx, url)
+	}
 
 	return Client, err
 }
 
+// DialCtx will connect to `url` and set the default client to client(url) if default client is nil
 func Dial(url string) (err error) {
 	Client.Client, err = ethclient.Dial(url)
 
 	return err
 }
 
+// ForceSetup is used in case you already have ethclient.Client and want to use features of gother
 func ForceSetup(c *ethclient.Client) *GotherClient {
 	Client = &GotherClient{
 		Client: c,
@@ -42,4 +48,8 @@ func (c GotherClient) IsSmartContract(ctx context.Context, addr string) (bool, e
 	}
 
 	return len(bytecode) > 0, nil
+}
+
+func (c GotherClient) Balance(ctx context.Context, address string) (*big.Int, error) {
+	return c.Client.BalanceAt(ctx, common.HexToAddress(address), nil)
 }
