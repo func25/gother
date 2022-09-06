@@ -25,17 +25,18 @@ func DialCtx(ctx context.Context, url string) (*GotherClient, error) {
 }
 
 // DialCtx will connect to `url` and set the default client to client(url) if default client is nil
-func Dial(url string) (err error) {
+func Dial(url string) (*GotherClient, error) {
 	client, err := ethclient.Dial(url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if Client.Client == nil {
 		Client.Client = client
+		return Client, nil
 	}
 
-	return nil
+	return &GotherClient{Client: client}, nil
 }
 
 // SetClient is used in case you already have ethclient.Client and want to use features of gother
