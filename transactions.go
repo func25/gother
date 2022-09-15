@@ -16,7 +16,7 @@ import (
 
 type Smc struct {
 	ABI     abi.ABI
-	Address string
+	Address string `validate:"required"`
 }
 
 type SmcTxData struct {
@@ -27,12 +27,13 @@ type SmcTxData struct {
 
 // NewSmcTx creates a transaction calling smart contract with suggest gas price and 110% gas limit
 func (c account) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts, error) {
-	var err error
 
-	pri := c.pri
-	if len(pri) == 0 {
-		pri = c.pri
+	// funtask: replace with validator
+	if len(tx.Smc.Address) == 0 {
+		return nil, errors.New("missing contract address")
 	}
+
+	var err error
 
 	priK, err := crypto.HexToECDSA(c.pri)
 	if err != nil {
