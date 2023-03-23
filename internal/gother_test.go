@@ -49,12 +49,14 @@ func (s *Agent) FromBlock(ctx context.Context) (uint64, error) {
 	return s.Block + 1, nil
 }
 
-func (s *Agent) ProcessLog(ctx context.Context, log types.Log) error {
-	if log.Removed {
-		return nil
-	}
+func (s *Agent) ProcessLogs(ctx context.Context, logs []types.Log) error {
+	for _, log := range logs {
+		if log.Removed {
+			return nil
+		}
 
-	fmt.Println(log.TxHash.Hex())
+		fmt.Println(log.TxHash.Hex())
+	}
 
 	return nil
 }
