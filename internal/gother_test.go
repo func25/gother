@@ -45,11 +45,11 @@ type Agent struct {
 }
 
 // GetBlock implements gother.IWorker
-func (s *Agent) FromBlock(ctx context.Context) (uint64, error) {
+func (s *Agent) FromBlock() (uint64, error) {
 	return s.Block + 1, nil
 }
 
-func (s *Agent) ProcessLogs(ctx context.Context, from, to uint64, logs []types.Log) error {
+func (s *Agent) ProcessLogs(from, to uint64, logs []types.Log) error {
 	for _, log := range logs {
 		if log.Removed {
 			return nil
@@ -61,7 +61,7 @@ func (s *Agent) ProcessLogs(ctx context.Context, from, to uint64, logs []types.L
 	return nil
 }
 
-func (s *Agent) UpdateBlock(ctx context.Context, block uint64) error {
+func (s *Agent) UpdateBlock(block uint64) error {
 	s.Block = block
 	return nil
 }

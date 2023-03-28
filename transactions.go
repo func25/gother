@@ -27,7 +27,6 @@ type SmcTxData struct {
 
 // NewSmcTx creates a transaction calling smart contract with suggest gas price and 110% gas limit
 func (c account) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts, error) {
-
 	// funtask: replace with validator
 	if len(tx.Smc.Address) == 0 {
 		return nil, errors.New("missing contract address")
