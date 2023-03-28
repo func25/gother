@@ -8,9 +8,8 @@ import (
 )
 
 type IAgent interface {
-	FromBlock(ctx context.Context) (uint64, error)          // get the next block which want to scan from
-	ProcessLogs(ctx context.Context, log []types.Log) error // process the logs that agent collects
-	UpdateBlock(ctx context.Context, block uint64) error    // update the scanned block after scanning
+	FromBlock(ctx context.Context) (uint64, error)                            // get the next block which want to scan from
+	ProcessLogs(ctx context.Context, from, to uint64, logs []types.Log) error // process the logs that agent collects
 }
 
 // Lazier is too lazy, he/she ignores errors when processing logs and updating block
@@ -46,11 +45,8 @@ func (sol Lazier[T]) Scan(s Scanner) chan struct{} {
 				}
 
 				// process logs
-				sol.Agent.ProcessLogs(ctx, logs)
+				sol.Agent.ProcessLogs(ctx, s.From, currentBlock, logs)
 				s.From = currentBlock + 1
-
-				// update block
-				_ = sol.Agent.UpdateBlock(ctx, currentBlock)
 			case <-stop:
 				return
 			}

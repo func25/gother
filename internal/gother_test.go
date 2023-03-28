@@ -49,7 +49,7 @@ func (s *Agent) FromBlock(ctx context.Context) (uint64, error) {
 	return s.Block + 1, nil
 }
 
-func (s *Agent) ProcessLogs(ctx context.Context, logs []types.Log) error {
+func (s *Agent) ProcessLogs(ctx context.Context, from, to uint64, logs []types.Log) error {
 	for _, log := range logs {
 		if log.Removed {
 			return nil
