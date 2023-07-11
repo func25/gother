@@ -26,7 +26,7 @@ type SmcTxData struct {
 }
 
 // NewSmcTx creates a transaction calling smart contract with suggest gas price and 110% gas limit
-func (c account) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts, error) {
+func (c Account) NewSmcTx(ctx context.Context, tx SmcTxData) (*bind.TransactOpts, error) {
 	// funtask: replace with validator
 	if len(tx.Smc.Address) == 0 {
 		return nil, errors.New("missing contract address")
@@ -87,7 +87,7 @@ type TxData struct {
 	Value *big.Int
 }
 
-func (c account) NewTx(ctx context.Context, data TxData) (*types.Transaction, error) {
+func (c Account) NewTx(ctx context.Context, data TxData) (*types.Transaction, error) {
 	var err error
 
 	pri := c.pri
@@ -152,7 +152,7 @@ func (c account) NewTx(ctx context.Context, data TxData) (*types.Transaction, er
 
 // sign transaction and send
 // return signed transaction
-func (c account) SendTx(ctx context.Context, data TxData) (*types.Transaction, error) {
+func (c Account) SendTx(ctx context.Context, data TxData) (*types.Transaction, error) {
 	tx, err := c.NewTx(ctx, data)
 	if err != nil {
 		return nil, err

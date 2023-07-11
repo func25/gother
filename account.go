@@ -8,37 +8,37 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-type account struct {
+type Account struct {
 	*GotherClient
 	pri string
 }
 
-func NewAccount(privateKey string) *account {
-	return &account{
+func NewAccount(privateKey string) *Account {
+	return &Account{
 		pri:          privateKey,
 		GotherClient: Client,
 	}
 }
 
-func (a *account) SetClient(client *GotherClient) *account {
+func (a *Account) SetClient(client *GotherClient) *Account {
 	a.GotherClient = client
 	return a
 }
 
-func (a *account) SetPrivate(privateKey string) *account {
+func (a *Account) SetPrivate(privateKey string) *Account {
 	a.pri = privateKey
 	return a
 }
 
-func (c account) Keccak256Sign(data ...[]byte) (str string, err error) {
+func (c Account) Keccak256Sign(data ...[]byte) (str string, err error) {
 	return Keccak256Sign(c.pri, data...)
 }
 
-func (c account) Sign(data []byte) (str string, err error) {
+func (c Account) Sign(data []byte) (str string, err error) {
 	return Sign(c.pri, data)
 }
 
-func (c account) PublicKey() (string, error) {
+func (c Account) PublicKey() (string, error) {
 	priv, err := crypto.HexToECDSA(c.pri)
 	if err != nil {
 		return "", err
@@ -47,7 +47,7 @@ func (c account) PublicKey() (string, error) {
 	return Util.GetPublicHex(priv)
 }
 
-func (c account) Address() (string, error) {
+func (c Account) Address() (string, error) {
 	priv, err := crypto.HexToECDSA(c.pri)
 	if err != nil {
 		return "", err
@@ -61,7 +61,7 @@ func (c account) Address() (string, error) {
 	return Util.GetAddressHex(pub), nil
 }
 
-func (c account) Balance(ctx context.Context) (*big.Int, error) {
+func (c Account) Balance(ctx context.Context) (*big.Int, error) {
 	address, err := c.Address()
 	if err != nil {
 		return nil, err
