@@ -30,8 +30,12 @@ func (a *Account) SetPrivate(privateKey string) *Account {
 	return a
 }
 
-func (c Account) Keccak256Sign(data ...[]byte) (str string, err error) {
+func (c Account) Keccak256Sign(data ...[]byte) (signature string, err error) {
 	return Keccak256Sign(c.pri, data...)
+}
+
+func (c Account) Keccak256SignBytes(data ...[]byte) (signature []byte, err error) {
+	return Keccak256SignBytes(c.pri, data...)
 }
 
 func (c Account) Sign(data []byte) (str string, err error) {

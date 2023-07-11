@@ -23,10 +23,24 @@ type Wallet struct {
 	Address      string
 }
 
-// Keccak256Sign will hash data to 32 bytes (= keccak256) then signing it
-func Keccak256Sign(prv string, data ...[]byte) (str string, err error) {
+// Keccak256Sign will hash data to 32 bytes (= keccak256) then signing it,
+// return hexa-signature which is 132 bytes (0x...)
+func Keccak256Sign(prv string, data ...[]byte) (signature string, err error) {
 	dataHash := crypto.Keccak256Hash(data...)
 	return Sign(prv, dataHash.Bytes())
+}
+
+// Keccak256SignBytes will hash data to 32 bytes (= keccak256) then signing it
+// return bytes-signature which is 65 bytes (32 bytes r, 32 bytes s, 1 byte v)
+func Keccak256SignBytes(prv string, data ...[]byte) (signature []byte, err error) {
+	dataHash := crypto.Keccak256Hash(data...)
+
+	sigHex, err := Sign(prv, dataHash.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	return hexutil.Decode(sigHex[2:]) // remove "0x"
 }
 
 // Sign signs the data with prefix `\x19Ethereum Signed Message:\n${len(data)}`
