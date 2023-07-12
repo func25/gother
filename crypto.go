@@ -4,7 +4,9 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"io"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -45,6 +47,16 @@ func Keccak256SignBytes(prv string, data ...[]byte) (signature []byte, err error
 
 func Keccak256Hash(data ...[]byte) (hash string) {
 	return crypto.Keccak256Hash(data...).Hex()
+}
+
+// JsonABI parses json abi to abi.ABI, panic if error
+func JsonABI(reader io.Reader) abi.ABI {
+	abi, err := abi.JSON(reader)
+	if err != nil {
+		panic(err)
+	}
+
+	return abi
 }
 
 // Sign signs the data with prefix `\x19Ethereum Signed Message:\n${len(data)}`
