@@ -43,6 +43,10 @@ func Keccak256SignBytes(prv string, data ...[]byte) (signature []byte, err error
 	return hexutil.Decode(sigHex[2:]) // remove "0x"
 }
 
+func Keccak256Hash(data ...[]byte) (hash string) {
+	return crypto.Keccak256Hash(data...).Hex()
+}
+
 // Sign signs the data with prefix `\x19Ethereum Signed Message:\n${len(data)}`
 func Sign(prv string, data []byte) (str string, err error) {
 	msg := fmt.Sprintf("%s%d%s", SIG_PREFIX, len(data), data)
