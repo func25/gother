@@ -45,7 +45,7 @@ type Agent struct {
 }
 
 // GetBlock implements gother.IWorker
-func (s *Agent) FromBlock(ctx context.Context) (uint64, error) {
+func (s *Agent) FromBlock() (uint64, error) {
 	return s.Block + 1, nil
 }
 

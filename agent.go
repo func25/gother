@@ -8,7 +8,7 @@ import (
 )
 
 type IAgent interface {
-	FromBlock(ctx context.Context) (uint64, error)       // get the next block which want to scan from
+	FromBlock() (uint64, error)                          // get the next block which want to scan from
 	ProcessLogs(from, to uint64, logs []types.Log) error // process the logs that agent collects
 }
 
@@ -32,7 +32,7 @@ func (sol Lazier[T]) Scan(s Scanner) chan struct{} {
 				ctx := context.Background()
 
 				// get block
-				if v, err := sol.Agent.FromBlock(ctx); err != nil {
+				if v, err := sol.Agent.FromBlock(); err != nil {
 					continue
 				} else {
 					s.From = v
