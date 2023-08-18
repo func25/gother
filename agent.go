@@ -2,6 +2,7 @@ package gother
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
@@ -33,6 +34,7 @@ func (sol Lazier[T]) Scan(s Scanner) chan struct{} {
 
 				// get block
 				if v, err := sol.Agent.FromBlock(); err != nil {
+					fmt.Println(err)
 					continue
 				} else {
 					s.From = v
@@ -41,11 +43,16 @@ func (sol Lazier[T]) Scan(s Scanner) chan struct{} {
 				// scan logs
 				logs, currentBlock, err := s.Scan(ctx)
 				if err != nil {
+					fmt.Println(err)
 					continue
 				}
 
 				// process logs
-				sol.Agent.ProcessLogs(s.From, currentBlock, logs)
+				if err := sol.Agent.ProcessLogs(s.From, currentBlock, logs); err != nil {
+					fmt.Println(err)
+					continue
+				}
+
 				s.From = currentBlock + 1
 			case <-stop:
 				return
